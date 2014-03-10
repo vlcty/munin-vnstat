@@ -5,9 +5,6 @@ use warnings;
 use utf8;
 use POSIX;
 
-# Fetch the param (if any)
-my $command = $ARGV[0] || '';
-
 # Get some stuff
 my $vnstatPath = `which vnstat` || '';
 
@@ -24,11 +21,11 @@ if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
 }
 elsif ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
 {
-	print("graph_title Amount of data transmitted\n");
-	print("graph_vtitle Data in (-) / Data out (+)\n");
+	print("graph_title Overall traffic overview\n");
+	print("graph_vtitle Transferred data (in MB)\n");
 	print("graph_category network\n");
 	print("graph_scale no\n");
-	print("graph_info Shows how much data is transmitted in one day in megabytes\n");
+	print("graph_info The graph shows the amount of data the server handled the current day\n");
 	
 	print("up.label Upload\n");
 	print("up.type GAUGE\n");
