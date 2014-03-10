@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use utf8;
+use POSIX;
+
+# Fetch the param (if any)
+my $command = $ARGV[0] || '';
+
+# Get some stuff
+my $vnstatPath = `which vnstat` || '';
+
+if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
+{
+	if ($vnstatPath eq '') {
+		print("no\n");
+		exit 1;
+	}
+	else {
+		print("yes\n");
+		exit 0;
+	}
+}
+elsif ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
+{
+	print("graph_title Amount of data transmitted\n");
+	print("graph_vtitle Data in (-) / Data out (+)\n");
+	print("graph_category network\n");
+	print("graph_scale no\n");
+	print("graph_info Shows how much data is transmitted in one day in megabytes\n");
+	
+	print("up.label Upload\n");
+	print("up.type GAUGE\n");
+	print("up.colour 00FF00\n");
+
+	print("down.label Download\n");
+	print("down.type GAUGE\n");
+	print("down.colour DF7401\n");
+
+	print("total.label Total\n");
+	print("total.type GAUGE\n");
+	print("total.colour 000000\n");
+	
+	exit 0;
+}
+else
+{
+	my $todayLine = `vnstat | grep "today"`;
+	$todayLine =~ s/ +/ /g;
+
+	my @values = split(/ /, $todayLine);
+
+	printf("up.value %d\n", normalize($values[5], $values[6]));
+	printf("down.value %d\n", normalize($values[2], $values[3]));
+	printf("total.value %d\n", normalize($values[8], $values[9]));
+
+	exit 0;
+}
+
+sub normalize {
+	my ($value,$unit) = @_;
+
+	my $result = 0.0;
+
+	if ($unit eq 'KiB') {
+		$result = 1;
+	}
+	elsif ($unit eq 'MiB') {
+		$result = $value;
+	}
+	elsif ($unit eq 'GiB') {
+		$result = $value * 1024;
+	}
+	else {
+		$result = ($value * 1024) * 1024;
+	}
+
+	return $result;
+}
