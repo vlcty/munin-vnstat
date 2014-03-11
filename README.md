@@ -15,6 +15,7 @@ Example
 This picture shows an example of an output:
 
 ![Example after a few houres running](http://files.veloc1ty.de/munin-examples/vnstat/vnstat1.png "vnStat Sample 1")
+![Example after a day](http://files.veloc1ty.de/munin-examples/vnstat/vnstat2.png "vnStat Sample 2")
 
 
 Installation
