@@ -65,23 +65,13 @@ sub printData {
 
 sub normalize {
 	my ($value,$unit) = @_;
-	my $result = 0.0;
+	my $multiplier = 1;
+	my @units = ('Kib','MiB','GiB','TiB');
 
-	if ($unit eq 'KiB') {
-		$result = $value * 1024;
-	}
-	elsif ($unit eq 'MiB') {
-		$result = ( $value * 1024 ) * 1024;
-	}
-	elsif ($unit eq 'GiB') {
-		$result = (($value * 1024) * 1024) * 1024;
-	}
-	elsif ($unit eq 'TiB') {
-		$result = ((($value * 1024) * 1024 ) * 1024 ) * 1024;
-	}
-	else {
-		return 2147483647;
+	for ( my $i = 0; $i < @units; $i++ ) {
+		$multiplier *= 1024;
+		last if ( $unit eq $units[$i] );
 	}
 
-	return $result;
+	return $value * $multiplier;
 }
