@@ -9,7 +9,15 @@ main();
 sub main {
 	determineVnstatPath();
 
-
+	if ( $ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i ) {
+		print("yes\n");
+	}
+	elsif ( $ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i ) {
+		printGraphConfig();
+	}
+	else {
+		printData();
+	}
 
 	exit 0;
 }
@@ -22,12 +30,13 @@ sub determineVnstatPath {
 }
 
 sub printGraphConfig {
-	print << EOS;
+	print <<EOS;
 graph_title Network traffic
 graph_vtitle Amount of traffic
 graph_category network
 graph_scale yes
 graph_info Shows the amount of in- and outbound traffic based on the data collected by vnStat
+graph_args --base 1000
 	
 out.label Outbound
 out.type GAUGE
@@ -43,53 +52,35 @@ overall.colour 000000
 EOS
 }
 
-if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
-{
-	if ($vnstatPath eq '') {
-		print("no\n");
-		exit 1;
-	}
-	else {
-		print("yes\n");
-		exit 0;
-	}
-}
-elsif ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
-{
-
-	
-	exit 0;
-}
-else
-{
-	my $todayLine = `vnstat | grep "today"`;
+sub printData {
+	my $todayLine = `vnstat | grep today`;
 	$todayLine =~ s/ +/ /g;
 
 	my @values = split(/ /, $todayLine);
 
-	printf("up.value %d\n", normalize($values[5], $values[6]));
-	printf("down.value %d\n", normalize($values[2], $values[3]));
-	printf("total.value %d\n", normalize($values[8], $values[9]));
-
-	exit 0;
+	printf("out.value %d\n", normalize($values[5], $values[6]));
+	printf("in.value %d\n", normalize($values[2], $values[3]));
+	printf("overall.value %d\n", normalize($values[8], $values[9]));
 }
 
 sub normalize {
 	my ($value,$unit) = @_;
-
 	my $result = 0.0;
 
 	if ($unit eq 'KiB') {
-		$result = 1;
-	}
-	elsif ($unit eq 'MiB') {
-		$result = $value;
-	}
-	elsif ($unit eq 'GiB') {
 		$result = $value * 1024;
 	}
+	elsif ($unit eq 'MiB') {
+		$result = ( $value * 1024 ) * 1024;
+	}
+	elsif ($unit eq 'GiB') {
+		$result = (($value * 1024) * 1024) * 1024;
+	}
+	elsif ($unit eq 'TiB') {
+		$result = ((($value * 1024) * 1024 ) * 1024 ) * 1024;
+	}
 	else {
-		$result = ($value * 1024) * 1024;
+		return 2147483647;
 	}
 
 	return $result;
