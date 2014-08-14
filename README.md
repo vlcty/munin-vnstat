@@ -1,30 +1,17 @@
 munin-vnstat
 ============
 
-Plugin for munin to display the network traffic for the current day
-
-The plugin displays the daily traffic in megabytes.
-The red graph shows the amount of incoming traffic and the green one the outgoing traffic.
-The black graph just sums it up to have a better overview.
-
-Requires a running vnstat daemon which updates the database.
-
-Example
--------
-
-This picture shows an example of an output:
-
-![Example after a few houres running](http://files.veloc1ty.de/munin-examples/vnstat/vnstat1.png "vnStat Sample 1")
-![Example after a day](http://files.veloc1ty.de/munin-examples/vnstat/vnstat2.png "vnStat Sample 2")
-
+A munin plugin to visualize daily traffic stats.
+The plugin draws three graphs: Inbound, outbound and overall traffic based on data collected by ``vnstat``.
+It's normal that the graphs drop to 0 after 24 o'clock because the counters a reset to 0.
 
 Installation
 ------------
 
-Place vnstat in
+Checkout this repository to ``/usr/share/munin/plugins``. Afterwards you have to create a softlink:
 
-/usr/share/munin/plugins
+``ln -s /usr/share/munin/plugins/munin-vnstat/vnstat /etc/munin/plugins/vnstat``
 
-and link it with
-
-ln -s /usr/share/munin/plugins/vnstat /etc/munin/plugins/vnstat
+After a few runs you can already see the output.
+After a day you can see a nice drawing.
+After a week you can see your peak time.
