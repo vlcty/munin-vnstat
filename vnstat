@@ -1,12 +1,47 @@
 #!/usr/bin/perl
-
 use strict;
-use warnings;
-use utf8;
-use POSIX;
 
-# Get some stuff
-my $vnstatPath = `which vnstat` || '';
+# Resources
+our $vnstatPath = '';
+
+main();
+
+sub main {
+	determineVnstatPath();
+
+
+
+	exit 0;
+}
+
+sub determineVnstatPath {
+	$vnstatPath = `which vnstat`;
+	chomp($vnstatPath);
+
+	die("Didn't find vnstat in \$PATH. Is it correctly installed?\n") if (length($vnstatPath) == 0);
+}
+
+sub printGraphConfig {
+	print << EOS;
+graph_title Network traffic
+graph_vtitle Amount of traffic
+graph_category network
+graph_scale yes
+graph_info Shows the amount of in- and outbound traffic based on the data collected by vnStat
+	
+out.label Outbound
+out.type GAUGE
+out.colour 00FF00
+
+in.label Inbound
+in.type GAUGE
+in.colour DF7401
+
+overall.label Overall
+overall.type GAUGE
+overall.colour 000000
+EOS
+}
 
 if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
 {
@@ -21,23 +56,7 @@ if ($ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i)
 }
 elsif ($ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i)
 {
-	print("graph_title Overall traffic overview\n");
-	print("graph_vtitle Transferred data (in MB)\n");
-	print("graph_category network\n");
-	print("graph_scale no\n");
-	print("graph_info The graph shows the amount of data the server handled the current day\n");
-	
-	print("up.label Upload\n");
-	print("up.type GAUGE\n");
-	print("up.colour 00FF00\n");
 
-	print("down.label Download\n");
-	print("down.type GAUGE\n");
-	print("down.colour DF7401\n");
-
-	print("total.label Total\n");
-	print("total.type GAUGE\n");
-	print("total.colour 000000\n");
 	
 	exit 0;
 }
