@@ -1,0 +1,157 @@
+#!/usr/bin/perl
+
+#!@@PERL@@ -w
+# -*- perl -*-
+
+=head1 NAME
+
+vnstat_ - Wildcard-plugin to monitor traffic on network interfaces.
+It uses vnstat package to read its data.
+
+=head1 CONFIGURATION
+
+This plugin does not normally require configuration.
+
+The plugin may need to run as root or an user with read rights over the vnstat DB.
+The error is:
+Error: Unable to open database directory "/var/lib/vnstat".
+Make sure it exists and is at least read enabled for current user.
+
+This is configured like this, for example in /etc/munin/plugin-conf.d/vnstat.conf:
+  [vnstat_*]
+  user  vnstat
+  group vnstat
+
+To set warning and critical levels do like this:
+
+  [vnstat_*]
+      env.warning 10000000
+
+This is a wildcard plugin. To monitor an interface, link
+vnstat_<interface> to this file. For example,
+
+  ln -s /usr/share/munin/plugins/munin-vnstat/vnstat_ \
+        /etc/munin/plugins/vnstat_eth0
+
+will monitor eth0.
+
+It has autoconf capability, then you can have the commands for links with the CLI command:
+munin-node-configure --shell
+
+Most devices found in /proc/net/dev can be monitored. Examples include
+ipsec*, eth*, irda*, and lo.
+
+=head1 AUTHOR
+
+Original author:        Josef 'veloc1ty' Stautner (https://github.com/vlcty)
+Wildcard plugin author: Henderb Rodriguez (https://github.com/henderbj).
+
+=head1 LICENSE
+
+GPLv3.0
+
+=head1 MAGIC MARKERS
+
+ #%# family=auto
+ #%# capabilities=autoconf suggest
+
+=cut
+
+use strict;
+
+# Resources
+our $vnstatPath = '';
+
+main();
+
+sub main {
+	determineVnstatPath();
+
+	if ( $ARGV[0] and $ARGV[0] =~ /^\s*autoconf\s*$/i ) {
+		print("yes\n");
+	}
+	elsif ( $ARGV[0] and $ARGV[0] =~ /^\s*config\s*$/i ) {
+		printGraphConfig();
+	}
+	elsif ( $ARGV[0] and $ARGV[0] =~ /^\s*suggest\s*$/i ) {
+		printGraphSuggest();
+        }
+	else {
+		printData();
+	}
+
+	exit 0;
+}
+
+sub determineVnstatPath {
+	$vnstatPath = `which vnstat`;
+	chomp($vnstatPath);
+
+	die("Didn't find vnstat in \$PATH. Is it correctly installed?\n") if (length($vnstatPath) == 0);
+}
+
+sub determineInterface {
+        #Detect interface from link
+        $0 =~ /vnstat_(.+)*$/;
+        my $interface = $1;
+
+        ###Uncomment next 2 lines for debugging interface detection from link name
+        ##printf("\$0 = %s\n", $0);
+        ##printf("\$interface = %s\n", $interface);
+        exit 2 unless defined $interface;
+        return $interface;
+}
+
+sub printGraphConfig {
+	my $interface = determineInterface();
+	print <<EOS;
+graph_title Network traffic for $interface
+graph_vtitle Amount of traffic
+graph_category network
+graph_scale yes
+graph_info Shows the amount of in- and outbound traffic based on the data collected by vnStat
+graph_args --base 1000
+	
+out.label Outbound
+out.type GAUGE
+out.colour 00FF00
+
+in.label Inbound
+in.type GAUGE
+in.colour DF7401
+
+overall.label Overall
+overall.type GAUGE
+overall.colour 000000
+EOS
+}
+
+sub printGraphSuggest {
+	my $output  = qx'/bin/ls -1 /sys/class/net/ | egrep -v "^lo$"';
+	print $output;
+}
+
+sub printData {
+	my $interface = determineInterface();
+	my $todayLine = `vnstat -i $interface | grep today`;
+	$todayLine =~ s/ +/ /g;
+
+	my @values = split(/ /, $todayLine);
+
+	printf("out.value %d\n", normalize($values[5], $values[6]));
+	printf("in.value %d\n", normalize($values[2], $values[3]));
+	printf("overall.value %d\n", normalize($values[8], $values[9]));
+}
+
+sub normalize {
+	my ($value,$unit) = @_;
+	my $multiplier = 1;
+	my @units = ('KiB','MiB','GiB','TiB');
+
+	for ( my $i = 0; $i < @units; $i++ ) {
+		$multiplier *= 1024;
+		last if ( $unit eq $units[$i] );
+	}
+
+	return $value * $multiplier;
+}
