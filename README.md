@@ -10,7 +10,13 @@ Installation
 
 Checkout this repository to ``/usr/share/munin/plugins``. Afterwards you have to create a softlink:
 
-``ln -s /usr/share/munin/plugins/munin-vnstat/vnstat /etc/munin/plugins/vnstat``
+``ln -s /usr/share/munin/plugins/munin-vnstat/vnstat_ /etc/munin/plugins/vnstat_etho``, in order to monitor eth0.
+
+The plugin has autoconf and suggest capabilities, so you can do:
+``munin-node-configure --shell --libdir=/usr/share/munin/plugins/munin-vnstat/ | bash``, in order to automatically
+create the links.
+
+Example configuration in code header "CONFIGURATION".
 
 After a few runs you can already see the output.
 After a day you can see a nice drawing.
